@@ -1,0 +1,7 @@
+name = "CHIP8"
+uuid = "6991333c-b158-11e9-35fe-2daa0655da49"
+authors = ["Sebastian Stabinger <sebastian@stabinger.name>"]
+version = "0.1.0"
+
+[deps]
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
