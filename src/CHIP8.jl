@@ -3,6 +3,7 @@ module CHIP8
 using StaticArrays
 
 include("sprites.jl")           # Defines sprites for all hex digits
+include("utils.jl")
 
 export Chip8, parseopcode
 
