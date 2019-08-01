@@ -4,6 +4,7 @@ using StaticArrays
 
 include("sprites.jl")           # Defines sprites for all hex digits
 include("utils.jl")
+include("graphics.jl")
 
 export Chip8, parseopcode
 
@@ -24,8 +25,8 @@ mutable struct Chip8
   # PC::UInt16                  # Stack pointer
   
   # Memory
-  mem::MVector{memsize, UInt8}  # Main memory
-  disp::MMatrix{32, 64, Bool}   # Display buffer
+  mem::Vector{UInt8}  # Main memory
+  disp::Matrix{Bool}   # Display buffer
 
   # Stack
   stack::Vector{UInt16}
@@ -34,8 +35,8 @@ end
 Chip8() = Chip8(zeros(SVector{16, UInt8}),        # General purpose registers
                 0, 0, 0,                          # Address, timer, sound register
                 program_start,                    # Program counter
-                zeros(MVector{memsize, UInt8}),   # Main memory
-                zeros(MMatrix{64, 32, Bool}),     # Display buffer
+                zeros(UInt8, memsize),   # Main memory
+                zeros(Bool, 64, 32),     # Display buffer
                 Vector{UInt16}(),                 # Stack
                 )
 
@@ -72,15 +73,15 @@ instructions = [
               end)
   Instruction("SE Vx, val", "3xkk", "Jump over next instruction if (Vx == val,)",
               function (c, x, kk)
-              c.V[x] == kk && c.PC += 2
+              (c.V[x] == kk) && (c.PC += 2)
               end)
   Instruction("SNE Vx, val", "4xkk", "Jump over next instruction if (Vx != val)",
               function (c, x, kk)
-              c.V[x] != kk && c.PC += 2
+              (c.V[x] != kk) && (c.PC += 2)
               end)
   Instruction("SE Vx, Vy", "5xy0", "Jump over next instruction if (Vx == Vy)",
               function (c, x, y)
-              c.V[x] == c.V[y] && c.PC += 2
+              (c.V[x] == c.V[y]) && (c.PC += 2)
               end)
   Instruction("LD Vx, val", "6xkk", "Vx = val",
               function (c, x, kk)
@@ -134,6 +135,7 @@ instructions = [
   Instruction("SNE Vx, Vy", "9xy0", "Jump over next instruction if (Vx != Vy)",
               function (c, x, y)
               if c.V[x] != c.V[y]
+              end
               end)
   Instruction("LD I, addr", "Annn", "I = addr",
               function (c, nnn)

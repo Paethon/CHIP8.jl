@@ -4,4 +4,5 @@ authors = ["Sebastian Stabinger <sebastian@stabinger.name>"]
 version = "0.1.0"
 
 [deps]
+SimpleDirectMediaLayer = "98e33af6-2ee5-5afd-9e75-cbc738b767c4"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
