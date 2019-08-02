@@ -4,7 +4,6 @@ using StaticArrays
 
 include("sprites.jl")           # Defines sprites for all hex digits
 include("utils.jl")
-include("graphics.jl")
 
 export Chip8, parseopcode
 
@@ -39,6 +38,9 @@ Chip8() = Chip8(zeros(SVector{16, UInt8}),        # General purpose registers
                 zeros(Bool, 64, 32),     # Display buffer
                 Vector{UInt16}(),                 # Stack
                 )
+
+include("graphics.jl")
+
 
 # Define our instructions
 

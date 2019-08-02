@@ -34,7 +34,12 @@ function SDL_create(xsize, ysize)
   return Window(win, renderer, framebuffer, pixels, xsize, ysize)
 end
 
-function render_pixels(w::Window)
+"""
+`_render_pixels(w::Window)`
+
+Renders the content of the pixel buffer in w to the screen
+"""
+function _render_pixels(w::Window)
   SDL.UpdateTexture(w.framebuffer,
                     C_NULL,
                     w.pixels,
@@ -45,22 +50,30 @@ function render_pixels(w::Window)
   SDL.RenderPresent(w.renderer)
 end
 
-function render_chip8_disp_buffer(c::Chip8, w::Window)
+"""
+`render_chip8_disp_buffer(ch8::Chip8, w::Window; scale::Integer)`
+
+Renders the content of the display buffer of ch8 to the window w
+
+ch8::Chip8     ... The chip8 system to render from
+
+w::Window      ... The window to render to
+
+scale::Integer ... One pixel of the diplay buffer should be how many pixels
+                   on the screen (if not specified is calculated using display 
+                   buffer and screen size)
+"""
+function render_chip8_disp_buffer(ch8::Chip8, w::Window; scale::Integer = size(w.pixels, 1)÷size(ch8.disp, 1))
   white = 0xFFFFFF
   black = 0x000000
-  framex = framey = 0
 
-  for x in 1:size(c.disp,1)
-    for dx in 1:5
-      for y in 1:size(c.disp,2)
-        for dy in 1:5
-          framey += 1
-        end
-      end
-      framey = 0
+  for x in 0:size(ch8.disp,1)-1
+    for y in 0:size(ch8.disp,2)-1
+      w.pixels[x*scale+1:(x+1)*scale, y*scale+1:(y+1)*scale] .= ch8.disp[x+1, y+1] ? white : black
     end
-    framex = 0
   end
+
+  _render_pixels(w)
 end
 
 destroy(w::Window) = SDL.DestroyWindow(w.win)
