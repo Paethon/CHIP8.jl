@@ -46,6 +46,13 @@ Chip8() = Chip8(zeros(SVector{16, UInt8}),        # General purpose registers
 
 include("graphics.jl")
 
+"""
+`decode(b::Integer) = reverse(digits(b, base = 2, pad = sizeof(b)))`
+
+Returns the digits of b as an array, where the most significant bit has the lowest index.
+Mainly used for decoding lines of sprites saved in memory as bytes.
+"""
+decode(b::Integer) = reverse(digits(b, base = 2, pad = sizeof(b)))
 
 # Define our instructions
 
@@ -56,10 +63,12 @@ struct Instruction
   f::Function
 end
 
+#TODO: Find a good solution for the 1-index problem in Julia ...
+
 instructions = [
   Instruction("CLS", "00E0", "Clear Screen",
               function (c)
-              c.disp .= 0
+              c.disp .= false
               end)
   Instruction("RET", "00EE", "Return from subroutine",
               function (c)
@@ -157,12 +166,21 @@ instructions = [
               x.V[x] = rand(UInt8) & kk
               # Do we have to set V[16] here?
               end)
-  Instruction("DRW Vx, Vy, n", "Dxyn", "Display n rows of sprite at position Vx, Vy",
+  Instruction("DRW Vx, Vy, n", "Dxyn", "Display n rows of sprites beginning at I to the position Vx, Vy",
               function (c, x, y, n)
-              c.V[16] = 0
-              for line in 1:n
-              
-              end
+              c.V[16] = 0       # Will contain 1 if there was a collision
+                for line in 1:n
+                  ypos = (c.V[y] + line) % disp_rows
+                  spriteline = decode(c.mem[c.I + line]) # Decode one line (one byte) of sprite
+                  for pixel in eachindex(spriteline)
+                    xpos = (c.V[x] + pixel) % disp_columns
+                    # Check if there has been a collision while drawing the pixel
+                    (spriteline[pixel] == 1) && (c.disp[xpos, ypos] == 1) && (c.V[16] = 1)
+                    # Draw pixel of sprite. This is done using xor.
+                    # i.e. drawing a white pixel on a white pixel will make it black again
+                    c.disp[xpos, ypos] ⊻= spriteline[pixel]
+                  end
+                end
               end)
   Instruction("SKP Vx", "Ex9E", "Skip next instruction if key Vx is pressed",
               function (c, x)

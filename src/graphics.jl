@@ -1,5 +1,4 @@
 using SimpleDirectMediaLayer
-
 const SDL = SimpleDirectMediaLayer
 
 struct Window
