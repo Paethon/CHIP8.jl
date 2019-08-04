@@ -4,6 +4,7 @@ using StaticArrays
 
 include("sprites.jl")           # Defines sprites for all hex digits
 include("utils.jl")
+include("keyboard.jl")
 
 export Chip8, parseopcode
 
@@ -29,14 +30,18 @@ mutable struct Chip8
 
   # Stack
   stack::Vector{UInt16}
+
+  # Keyboard
+  keys::SVector{16, Bool}       # Models which of the 16 keys are pressed at the moment
 end
 
 Chip8() = Chip8(zeros(SVector{16, UInt8}),        # General purpose registers
                 0, 0, 0,                          # Address, timer, sound register
                 program_start,                    # Program counter
-                zeros(UInt8, memsize),   # Main memory
-                zeros(Bool, 64, 32),     # Display buffer
+                zeros(UInt8, memsize),            # Main memory
+                zeros(Bool, 64, 32),              # Display buffer
                 Vector{UInt16}(),                 # Stack
+                zeros(SVector{16, Bool}),         # Keys
                 )
 
 include("graphics.jl")
