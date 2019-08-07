@@ -1,7 +1,7 @@
 using SimpleDirectMediaLayer
 const SDL = SimpleDirectMediaLayer
 
-struct Window
+mutable struct Window           # Mutable so we can register a finalizer
   win
   renderer
   framebuffer
@@ -30,7 +30,12 @@ function SDL_create(xsize, ysize)
   
   pixels = Matrix{UInt32}(undef, xsize, ysize)
   
-  return Window(win, renderer, framebuffer, pixels, xsize, ysize)
+  w = Window(win, renderer, framebuffer, pixels, xsize, ysize)
+
+  # Close window if no references are left. Otherwise nasty stuff happens
+  finalizer(destroy, w)
+
+  return w
 end
 
 """

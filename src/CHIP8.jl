@@ -5,6 +5,7 @@ using StaticArrays
 include("sprites.jl")           # Defines sprites for all hex digits
 include("utils.jl")
 include("keyboard.jl")
+include("tests.jl")
 
 export Chip8, parseopcode
 
@@ -16,7 +17,7 @@ const disp_rows = 32            # Number of vertical pixels
 "Holds the state of a CHIP8 system"
 mutable struct Chip8
   # Registers
-  V::SVector{16, UInt8}         # General purpose registers
+  V::MVector{16, UInt8}         # General purpose registers
   I::UInt16                     # Address register
   DT::UInt8                     # Timer register
   ST::UInt8                     # Sound register
@@ -35,14 +36,20 @@ mutable struct Chip8
   keys::SVector{16, Bool}       # Models which of the 16 keys are pressed at the moment
 end
 
-Chip8() = Chip8(zeros(SVector{16, UInt8}),        # General purpose registers
-                0, 0, 0,                          # Address, timer, sound register
-                program_start,                    # Program counter
-                zeros(UInt8, memsize),            # Main memory
-                zeros(Bool, 64, 32),              # Display buffer
-                Vector{UInt16}(),                 # Stack
-                zeros(SVector{16, Bool}),         # Keys
-                )
+function Chip8()
+  ch8 = Chip8(zeros(MVector{16, UInt8}),        # General purpose registers
+              0, 0, 0,                          # Address, timer, sound register
+              program_start,                    # Program counter
+              zeros(UInt8, memsize),            # Main memory
+              zeros(Bool, 64, 32),              # Display buffer
+              Vector{UInt16}(),                 # Stack
+              zeros(SVector{16, Bool}),         # Keys
+              )
+  # Write predefined digit sprites to memory (starting at 0x100)
+  ch8.mem[0x101:0x101+length(sprites)-1] = sprites
+
+  return ch8
+end
 
 include("graphics.jl")
 
@@ -169,16 +176,16 @@ instructions = [
   Instruction("DRW Vx, Vy, n", "Dxyn", "Display n rows of sprites beginning at I to the position Vx, Vy",
               function (c, x, y, n)
               c.V[16] = 0       # Will contain 1 if there was a collision
-                for line in 1:n
-                  ypos = (c.V[y] + line) % disp_rows
-                  spriteline = decode(c.mem[c.I + line]) # Decode one line (one byte) of sprite
-                  for pixel in eachindex(spriteline)
-                    xpos = (c.V[x] + pixel) % disp_columns
-                    # Check if there has been a collision while drawing the pixel
-                    (spriteline[pixel] == 1) && (c.disp[xpos, ypos] == 1) && (c.V[16] = 1)
-                    # Draw pixel of sprite. This is done using xor.
-                    # i.e. drawing a white pixel on a white pixel will make it black again
-                    c.disp[xpos, ypos] ⊻= spriteline[pixel]
+              for line in 1:n
+                ypos = (c.V[y] + line) % disp_rows
+                spriteline = decode(c.mem[c.I + line - 1]) # Decode one line (one byte) of sprite
+                for pixel in eachindex(spriteline)
+                  xpos = (c.V[x] + pixel) % disp_columns
+                  # Check if there has been a collision while drawing the pixel
+                  (spriteline[pixel] == 1) && (c.disp[xpos, ypos] == 1) && (c.V[16] = 1)
+                  # Draw pixel of sprite. This is done using xor.
+                  # i.e. drawing a white pixel on a white pixel will make it black again
+                  c.disp[xpos, ypos] ⊻= spriteline[pixel]
                   end
                 end
               end)
