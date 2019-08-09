@@ -1,6 +1,6 @@
 module CHIP8
 
-using StaticArrays
+using OffsetArrays
 
 include("sprites.jl")           # Defines sprites for all hex digits
 include("utils.jl")
@@ -17,7 +17,7 @@ const disp_rows = 32            # Number of vertical pixels
 "Holds the state of a CHIP8 system"
 mutable struct Chip8
   # Registers
-  V::MVector{16, UInt8}         # General purpose registers
+  V::AbstractVector{UInt8}      # General purpose registers
   I::UInt16                     # Address register
   DT::UInt8                     # Timer register
   ST::UInt8                     # Sound register
@@ -26,24 +26,24 @@ mutable struct Chip8
   # PC::UInt16                  # Stack pointer
   
   # Memory
-  mem::Vector{UInt8}  # Main memory
-  disp::Matrix{Bool}   # Display buffer
+  mem::AbstractVector{UInt8}    # Main memory
+  disp::AbstractMatrix{Bool}    # Display buffer
 
   # Stack
-  stack::Vector{UInt16}
+  stack::AbstractVector{UInt16}
 
   # Keyboard
-  keys::SVector{16, Bool}       # Models which of the 16 keys are pressed at the moment
+  keys::AbstractVector{Bool}    # Models which of the 16 keys are pressed at the moment
 end
 
 function Chip8()
-  ch8 = Chip8(zeros(MVector{16, UInt8}),        # General purpose registers
-              0, 0, 0,                          # Address, timer, sound register
-              program_start,                    # Program counter
-              zeros(UInt8, memsize),            # Main memory
-              zeros(Bool, 64, 32),              # Display buffer
-              Vector{UInt16}(),                 # Stack
-              zeros(SVector{16, Bool}),         # Keys
+  ch8 = Chip8(OffsetVector(zeros(UInt8, 16), 0:15),                # General purpose registers
+              0, 0, 0,                                             # Address, timer, sound register
+              program_start,                                       # Program counter
+              OffsetVector(zeros(UInt8, memsize), 0:memsize-1),    # Main memory
+              OffsetMatrix(zeros(Bool, 64, 32), 0:63, 0:32),       # Display buffer
+              Vector{UInt16}(),                                    # Stack
+              OffsetVector(zeros(Bool, 16), 0:15),                 # Keys
               )
   # Write predefined digit sprites to memory (starting at 0x100)
   ch8.mem[0x101:0x101+length(sprites)-1] = sprites
